@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ topic_curr.title }}{% endblock %}
+{% block content %}
+
+{% if user.is_authenticated %}
+<div class="modal" tabindex="-1" aria-labelledby="modallabel{{ topic_curr.slug }}" aria-hidden="true" id="modal{{ topic_curr.slug }}">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modal-title">Удаление</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+      </div>
+      <form method="post">
+          {% csrf_token %}
+      <div class="modal-body" id='modal-body-topic-detail'>
+        <p id='text-modal'>Вы уверены, что хотите удалить ""?</p>
+      </div>
+      <div class="modal-footer">
+          <button type="submit" class="btn" name="delete" value="" id="btn_confirm">Удалить</button>
+        </form>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+    <div class="container my-5 px-5">
+        <h2>{{ topic_curr.title }}</h2>
+        <p>
+          <a href="{% url 'knowledge_base_app:category-detail' topic_curr.category.slug %}"
+          class="my-2 text-decoration-none"><img src="{% static 'image/arrow-left.svg' %}" alt="back"> Вернуться к разделу</a>
+        </p>
+        {% if user.is_authenticated %}
+        {% if perms.knowledge_base_app.change_topic %}
+        <p>
+            <a href="#" class="text-decoration-none text-warning"
+            data-bs-toggle="modal" data-bs-target="#modal{{ topic_curr.slug }}" id="{{ topic_curr.slug }}-edit">Изменить название темы <img src="{% static 'image/pencil-square.svg' %}" alt="edit"></a>
+        </p>
+        {% endif %}
+        {% if perms.knowledge_base_app.delete_topic %}
+        <p>
+            <a href="#" class="text-decoration-none text-danger"
+            data-bs-toggle="modal" data-bs-target="#modal{{ topic_curr.slug }}" id="{{ topic_curr.slug }}">Удалить тему <img src="{% static 'image/x-circle.svg' %}" alt="delete"></a>
+        </p>
+        {% endif %}
+        {% endif %}
+        <ol class="list-group py-4 rounded-0">
+            {% for article in topic_curr.has_published_articles %}
+              <li class="list-group-item w-75 d-flex justify-content-between">
+                  <a href="{{ article.get_absolute_url }}" class="h6 link-underline link-underline-opacity-0">{{ article.title }}</a>
+                  {% if user.is_authenticated and perms.knowledge_base_app.delete_article %}
+                      <button type="submit" class="btn btn-outline-danger btn-sm d-flex align-items-center"
+                      name="delete" value="{{ article.title }}" id="{{ article.slug }}"
+                      data-bs-toggle="modal" data-bs-target="#modal{{ topic_curr.slug }}">
+                          <img src="{% static 'image/x-circle.svg' %}" class="me-2" alt="delete">Удалить</button>
+                  {% endif %}
+                </li>
+                {% empty %}
+                <li class="list-group-item w-50">
+                    <span class="h5">Нет опубликованных статей в этой теме.</span>
+                </li>
+            {% endfor %}
+        </ol>
+        {% if user.is_authenticated and perms.knowledge_base_app.add_article %}
+        <p>
+            <a type="submit" href="{% url 'knowledge_base_app:article-add' topic_curr.slug %}" class="btn btn-sm btn-dark" name="add_article" value="{{ topic_curr.slug }}"
+            id="{{ topic_curr.slug }}-add-article">Добавить статью</a>
+        </p>
+        {% endif %}
+{% endblock content %}
+{% block js %}
+{% if user.is_authenticated %}
+<script>
+const myModal = document.getElementById('modal{{ topic_curr.slug }}')
+
+myModal.addEventListener('shown.bs.modal', (event) => {
+    const btn = event.relatedTarget;
+    const textModal = document.getElementById('text-modal');
+    const titleModal = document.getElementById('modal-title');
+    const btn_confirm = document.getElementById('btn_confirm');
+    const modal_body = document.querySelector('#modal-body-topic-detail');
+
+    if (btn.tagName === 'A' && btn.id === "{{ topic_curr.slug }}-edit") {
+        titleModal.textContent = `Редактирование темы`;
+        modal_body.innerHTML = `
+                {{ form.as_p }}
+        `;
+        if (btn_confirm.classList.contains('btn-danger')) {
+            btn_confirm.classList.remove('btn-danger');
+        }
+        btn_confirm.classList.add('btn-primary');
+        btn_confirm.textContent = 'Сохранить изменения';
+        btn_confirm.setAttribute('name', 'edit_topic');
+        btn_confirm.setAttribute('value', "{{ topic_curr.slug }}");
+    } else if (btn.tagName === 'A') {
+        titleModal.textContent = `Удаление темы`;
+        modal_body.innerHTML = `
+            <p id='text-modal'>Вы уверены, что хотите удалить тему "{{ topic_curr.title }}"?</p>
+        `;
+        if (btn_confirm.classList.contains('btn-primary')) {
+            btn_confirm.classList.remove('btn-primary');
+        }
+        btn_confirm.classList.add('btn-danger');
+        btn_confirm.setAttribute('name', 'delete_topic');
+        btn_confirm.textContent = 'Удалить тему';
+        btn_confirm.setAttribute('value', btn.id);
+    }
+    else if (btn.tagName === 'BUTTON') {
+        titleModal.textContent = `Удаление статьи`;
+        modal_body.innerHTML = `
+            <p id='text-modal'>Вы уверены, что хотите удалить статью "${btn.value}"?</p>
+        `;
+        if (btn_confirm.classList.contains('btn-primary')) {
+            btn_confirm.classList.remove('btn-primary');
+        }
+        btn_confirm.classList.add('btn-danger');
+        btn_confirm.textContent = 'Удалить статью';
+        btn_confirm.setAttribute('name', 'delete_article');
+        btn_confirm.setAttribute('value', btn.id);
+    }
+})
+</script>
+{% endif %}
+{% endblock js %}

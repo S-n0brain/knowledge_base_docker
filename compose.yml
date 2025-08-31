@@ -1,0 +1,84 @@
+services:
+  postgres:
+    image: postgres:17.6-alpine
+    container_name: postgresql
+    environment:
+      - POSTGRES_USER=$(DATABASE_USER)
+      - POSTGRES_PASSWORD=$(DATABASE_PASSWORD)
+      - POSTGRES_DB=$(DATABASE_NAME)
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - knows_net
+
+
+  adminer:
+    image: adminer # сам образ
+    container_name: adminer_con
+    ports:
+      - "127.0.0.1:8080:8080"
+    links:
+      - postgres:db # Не название контейнера, а название сервиса postgres:alies псевдоним внутри сервиса админер
+    networks:
+      - knows_net
+    depends_on:
+      - postgres
+
+  elasticsearch:
+    image: elasticsearch:9.0.5
+    container_name: elasticsearch_con
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    networks:
+      - knows_net
+    depends_on:
+      - postgres
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+
+  knowledge_base_django:
+    build: ./knw_base_docker
+    image: knowledge_base_django
+    container_name: knowledge_base_django_con
+    env_file:
+      - ./knw_base_docker/.env
+    command: "gunicorn -c gunicorn.py knowledge_base.wsgi"
+    restart: always
+    ports:
+      - "8000:8000"
+    networks:
+      - knows_net
+    depends_on:
+      - postgres
+    links:
+      - "postgres:dbps"
+    volumes:
+      - ./knw_base_docker:/www/app
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./knw_base_docker/logs:/www/app/logs
+      - ./knw_base_docker/staticfiles:/www/app/staticfiles
+      - ./knw_base_docker/media:/www/app/media
+      - ./nginx:/etc/nginx/conf.d
+    networks:
+      - knows_net
+    depends_on:
+      - knowledge_base_django
+
+networks:
+      knows_net:
+        driver: bridge
+
+volumes:
+  postgres-data:
+  elasticsearch-data:

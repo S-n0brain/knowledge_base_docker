@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ article_curr.title }}{% endblock title %}
+{% block content %}
+
+{% if user.is_authenticated %}
+<div class="modal" tabindex="-1" aria-labelledby="modallabel{{ article_curr.slug }}" aria-hidden="true" id="modal{{ article_curr.slug }}">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Удаление статьи</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+      </div>
+      <div class="modal-body">
+        <p>Вы уверены, что хотите удалить эту статью?</p>
+      </div>
+      <div class="modal-footer">
+        <form method="post">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger" name="delete" value="{{ article_curr.slug }}">Удалить</button>
+        </form>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+
+<div class="container my-5 px-5">
+    <h2 class="text-center">{{ article_curr.title }}</h2>
+    <a href="{% url 'knowledge_base_app:topic-detail' topic_curr.slug %}" class="my-2 text-decoration-none"><img src="{% static 'image/arrow-left.svg' %}" alt="back"> Вернуться к теме</a>
+    <div class="my-2">
+        <p class="text-muted"><strong>Раздел:</strong> {{ category_curr.title }}</p>
+        <p class="text-muted"><strong>Тема:</strong> {{ topic_curr.title }}</p>
+        <p class="text-muted"><strong>Дата добавления:</strong> {{ article_curr.created_at|date:"d.m.Y" }}</p>
+        {% if user.is_authenticated %}
+        {% if perms.knowledge_base_app.change_article %}
+          <p>
+              <a href="{% url 'knowledge_base_app:article-update' article_curr.slug %}"
+              class="my-2 text-decoration-none">Редактировать статью
+              <img src="{% static 'image/pencil-square.svg' %}" alt="edit"></a>
+          </p>
+        {% endif %}
+        {% if perms.knowledge_base_app.delete_article %}
+          <p>
+              <a href="#" class="text-decoration-none text-danger"
+              data-bs-toggle="modal" data-bs-target="#modal{{ article_curr.slug }}">Удалить статью <img src="{% static 'image/x-circle.svg' %}" alt="delete"></a>
+          </p>
+        {% endif %}
+        {% endif %}
+    </div>
+    <hr>
+    <div class="container my-5 py-5 px-5 bg-white border border-1 rounded shadow-sm">
+        {{ article_curr.content|safe }}
+    </div>
+</div>
+{% endblock content %}

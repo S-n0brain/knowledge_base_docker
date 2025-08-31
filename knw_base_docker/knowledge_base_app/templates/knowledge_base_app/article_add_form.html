@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock title %}
+{% block content %}
+<div class="container my-5">
+    <h2 class="mx-5">{{ title }}</h2>
+    <form method="post" class="my-5 w-50" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.media }}
+        {% for field in form %}
+            <div class="form-error my-2">{{ form.non_field_errors }}</div>
+            <div>
+                <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                <div class="invalid-feedback d-block my-2">
+                {{ field.errors }}
+                </div>
+            </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-dark">Сохранить</button>
+    </form>
+</div>
+{% endblock content %}

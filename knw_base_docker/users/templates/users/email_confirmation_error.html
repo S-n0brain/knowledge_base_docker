@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Ошибка подтверждения email{% endblock %}
+{% block navbar %}
+{% endblock %}
+{% block content %}
+<div class="container my-5">
+    <h2>Ошибка подтверждения email</h2>
+    <p>Произошла ошибка при подтверждении вашего email. Пожалуйста, попробуйте еще раз.</p>
+    <p>
+        <a href="{% url 'users:profile' %}">Вернуться в профиль</a>
+    </p>
+</div>
+{% endblock %}

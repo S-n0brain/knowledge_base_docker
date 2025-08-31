@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock title %}
+{% block content %}
+    <div class="container my-5 px-5">
+        <h2>{{ welcome_message }}</h2>
+        <p class="lead">{{ about_message }}</p>
+        <div class="py-4">
+            <h4 class="pb-2">Последение обновления</h4>
+            <div class="p-2 d-xl-flex gap-3">
+                {% for article in last_articles %}
+                    <div class="card w-75 rounded-0 mb-3 mb-xl-0">
+                        <a href="{{ article.get_absolute_url }}" class="link-dark text-decoration-none">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ article.title|truncatewords:8 }}</h5>
+                                <p class="card-text">{{ article.topic|truncatewords:11 }}</p>
+                                <p class="card-text text-muted">{{ article.updated_at|date:"d M Y" }}</p>
+                            </div>
+                        </a>
+                    </div>
+                {% empty %}
+                    <p class="text-muted">Пока что обновлений нет</p>
+                {% endfor %}
+            </div>
+        </div>
+        <ol class="list-group py-4">
+            <h4 class="pb-3">Содержание</h4>
+            {% for cat in categories %}
+            <li class="list-group-item">
+                <a href="{{ cat.get_absolute_url }}" class="h5 link-underline link-underline-opacity-0">{{ cat.title }}</a>
+                {% for topic in cat.topics.all %}
+                    <p class="my-1 ms-4"><a href="{{ topic.get_absolute_url }}" class="h6 link-underline link-underline-opacity-0">{{ topic.title }}</a></p>
+                    {% for article in topic.has_published_articles %}
+                        <p class="my-1 p-1 ms-5"><a href="{{ article.get_absolute_url }}" class="small text-muted link-underline link-underline-opacity-0">{{ article.title }}</a></p>
+                    {% endfor %}
+                {% endfor %}
+            {% empty %}
+                <h5>База знаний пуста</h5>
+            {% endfor %}
+            </li>
+        </ol>
+</div>
+{% endblock content %}

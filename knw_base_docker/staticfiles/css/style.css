@@ -1,0 +1,15 @@
+main {
+    background-color: #f9fafb;
+}
+#userDropdown {
+    height: 2rem;
+}
+ #add_article_icon, #add_category_icon, #add_topic_icon {
+    width: 20px;
+    height: 20px;
+    background-color: #f9fafb;
+ }
+ #user-dropdown-icon{
+    width: 32px;
+    height: 32px;
+ }

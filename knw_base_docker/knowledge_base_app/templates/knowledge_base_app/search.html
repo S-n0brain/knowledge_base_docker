@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ title }}{% endblock title %}
+{% block navbar %}
+{% endblock %}
+{% block content %}
+<div class="container  mx-5 my-5">
+    <h1>Поиск статей</h1>
+    <form method="GET" class="my-2" id="form_search">
+        <div class="row align-items-center text-center">
+            <div class="col-9 col-sm-6 col-md-7 col-lg-9">{{ form_search.query }}</div>
+            <div class="col">
+                <button type="submit" class="btn btn-dark btn-sm mx-2">Поиск</button>
+                <button class="btn btn-dark btn-sm my-2" id="reset_filters">Сбросить фильтры</button>
+            </div>
+        </div>
+            <div class="row row-cols-1 row-cols-sm-3 justify-content-evenly align-items-center">
+                <div class="col position-relative px-2">
+                    <button class="btn w-100" type="button" data-bs-toggle="collapse" 
+                    data-bs-target="#collapse_cat" aria-expanded="false" aria-controls="collapse_cat">
+                        Раздел <img src="{% static 'image/chevron-down.svg' %}" alt="down">
+                    </button>
+                    <div class="collapse position-absolute w-100 m-0 z-3" id="collapse_cat">
+                        <div class="card p-1 mt-2 w-100 text-start">
+                            <div class="card-body py-0">
+                                <p>
+                                    {{ form_search.category }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col position-relative px-2">
+                    <button class="btn w-100" type="button" data-bs-toggle="collapse" 
+                    data-bs-target="#collapse_topic" aria-expanded="false" aria-controls="collapse_topic">
+                        Тема <img src="{% static 'image/chevron-down.svg' %}" alt="down">
+                    </button>
+                    <div class="collapse position-absolute w-100 m-0 z-3" id="collapse_topic">
+                        <div class="card p-1 mt-2 w-100 text-start">
+                            <div class="card-body py-0">
+                                <p>
+                                    {{ form_search.topic }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col position-relative px-2">
+                    <button class="btn w-100" type="button" data-bs-toggle="collapse" 
+                    data-bs-target="#collapse_date" aria-expanded="false" aria-controls="collapse_date">
+                        Дата добавления <img src="{% static 'image/chevron-down.svg' %}" alt="down">
+                    </button>
+                    <div class="collapse position-absolute w-100 m-0 z-3" id="collapse_date">
+                        <div class="card p-1 mt-2 w-100 text-start">
+                            <div class="card-body py-0">
+                                <p class="my-2">
+                                    С {{ form_search.date_created_from }}
+                                </p>
+                                <p class="my-2">
+                                    По {{ form_search.date_created_to }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    </form>
+    <div>
+         
+    </div>
+    {% if articles %}
+        <h2 class="my-4">Результаты поиска:</h2>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">Название</th>
+                    <th scope="col">Раздел</th>
+                    <th scope="col">Тема</th>
+                    <th scope="col">Содержание</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for article in articles %}
+                <tr>
+                    <td>
+                        <a href="{% url 'knowledge_base_app:article-detail' slug=article.slug %}">{{ article.title }}</a>
+                        <br>
+                        <small class="text-muted">Добавлено: {{ article.created_at|date:"d.m.Y" }}</small>
+                    </td>
+                    <td>{{ article.topic.category }}</td>
+                    <td>{{ article.topic.title }}</td>
+                    <td>{{ article.get_plain_content|truncatewords:100 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Статьи не найдены.</p>
+    {% endif %}
+</div>
+{% endblock %}
+{% block js %}
+<script>
+    const reset_btn = document.getElementById("reset_filters")
+    reset_btn.addEventListener("click", function() {
+        // Сбросить фильтры
+        console.log("Сброс фильтров");
+        const filters = document.querySelectorAll(".filter");
+        for (let i = 0; i < filters.length; i++) {
+            filters[i].value = '';
+        };
+    });
+</script>
+{% endblock js %}

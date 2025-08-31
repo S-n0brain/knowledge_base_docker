@@ -1,0 +1,54 @@
+{% comment %} Форма служит для добавления категорий и тем {% endcomment %}
+<div class="modal" tabindex="-1" aria-labelledby="modallabel-category-add-modal"
+    aria-hidden="true" id="modal-category-add">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title" id="modal-title-cat-add"></h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+        </div>
+         <form method="post" action="" id='form-category-topic-add'
+         name="next" value="{{ request.path }}">
+         {% csrf_token %}
+        <div class="modal-body" id='modal-body-cat-add'>
+        </div>
+        <div class="modal-footer" id='modal-footer-cat-add'>
+            <button type="submit" class="btn btn-dark" name="add-category" value="" id="btn-add-category"></button>
+            </form>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+        </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const addCatModal = document.getElementById('modal-category-add');
+    addCatModal.addEventListener('shown.bs.modal', (event) => {
+        const btn = event.relatedTarget;
+        const titleModal = document.getElementById('modal-title-cat-add');
+        const modalBody = document.getElementById('modal-body-cat-add');
+        const btn_confirm = document.getElementById('btn-add-category');
+        const form = document.getElementById('form-category-topic-add');
+
+        if (btn.id === "add_category_link") {
+            form.action = "{% url 'knowledge_base_app:category-add' %}";
+            titleModal.textContent = `Добавление раздела`;
+            btn_confirm.textContent = 'Добавить раздел';
+            modalBody.innerHTML = `
+                {{ form_add_category.as_p }}
+            `;
+            btn_confirm.setAttribute('name', 'add_category');
+            btn_confirm.setAttribute('value', "add_category");
+        }
+        else if (btn.id === "add_topic_link") {
+            form.action = "{% url 'knowledge_base_app:topic-add' %}";
+            titleModal.textContent = `Добавление темы`;
+            btn_confirm.textContent = 'Добавить тему';
+            modalBody.innerHTML = `
+                {{ form_add_topic.as_p }}
+            `;
+            btn_confirm.setAttribute('name', 'add_topic');
+            btn_confirm.setAttribute('value', "add_topic");
+        }
+    });
+</script>

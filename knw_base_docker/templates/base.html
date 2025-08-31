@@ -1,0 +1,140 @@
+{% load static %}
+{% load my_tags %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Knowledge Base{% endblock %}</title>
+    <link rel="icon" type="image/x-icon" href="#">
+    <link rel="stylesheet" href="{% static 'css/bootstrap.css' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <script src="{% static 'js/bootstrap.bundle.js' %}"></script>
+</head>
+<body>
+{%  get_search_form as form_search2 %}
+<header class="container-fluid">
+    <nav class="navbar shadow-sm d-flex justify-content-between align-items-center px-4">
+        <!-- Левая часть: логотип -->
+        <a class="navbar-brand fw-bold mb-0 me-auto" href="{% url 'knowledge_base_app:index' %}">База знаний</a>
+        <form class="d-flex mx-4"  method="GET" action="{% url 'knowledge_base_app:article-search' %}">
+            {{ form_search2.query }}
+            <button class="btn btn-outline-dark btn-sm rounded-circle mx-3 mt-2" type="submit" style="height: 35px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+                    <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+                </svg>
+            </button>
+        </form>
+        {% if user.is_authenticated %}
+            {% if perms.knowledge_base_app.add_category %}
+                <a href="#" class="btn btn-outline-dark btn-sm d-flex align-items-center mx-2"
+                 data-bs-toggle="modal" data-bs-target="#modal-category-add" id='add_category_link'>
+                    <img src="{% static 'image/plus-square.svg' %}" alt="+" class="mx-1" id="add_category_icon">
+                    <span>Добавить раздел</span>
+                </a>
+            {% endif %}
+            {% if perms.knowledge_base_app.add_topic %}
+                <a href="#" class="btn btn-outline-dark btn-sm d-flex align-items-center mx-2"
+                 data-bs-toggle="modal" data-bs-target="#modal-category-add" id='add_topic_link'>
+                    <img src="{% static 'image/plus-square.svg' %}" alt="+" class="mx-1" id="add_topic_icon">
+                    <span>Добавить тему</span>
+                </a>
+            {% endif %}
+            {% if perms.knowledge_base_app.add_article %}
+                <a href="{% url 'knowledge_base_app:article-add' %}" id="add_article" class="btn btn-outline-dark btn-sm d-flex align-items-center mx-2">
+                    <img src="{% static 'image/plus-square.svg' %}" alt="+" class="mx-1" id="add_article_icon">
+                    <span>Добавить статью</span>
+                </a>
+            {% endif %}
+        {% endif %}
+            <!-- Иконка пользователя -->
+            <div class="dropdown mx-2">
+                <a href="#" class="d-flex align-items-center" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <img src="{% if user.is_authenticated and user.photo %}{{ user.photo.url }}{% else %}{% static 'image/person-circle.svg' %}{% endif %}"
+                    alt="user" id='user-dropdown-icon' class="rounded-circle">
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown" id="userDropdownlist">
+                    {% if user.is_authenticated %}
+                        <li><a class="dropdown-item" href="{% url 'users:profile' %}">Профиль</a></li>
+                        <li><a class="dropdown-item" href="{% url 'users:password_change' %}">Сменить пароль</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <form action="{% url 'users:logout' %}" method="post">
+                                {% csrf_token %}
+                                <button type="submit" class="dropdown-item text-danger">Выйти</button>
+                            </form>
+                        </li>
+                    {% else %}
+                        <li><a class="dropdown-item" href="{% url 'users:login' %}">Войти</a></li>
+                        <li><a class="dropdown-item" href="{% url 'users:register' %}">Зарегистрироваться</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        
+    </nav>
+</header>
+<div class="container-fluid">
+    <div class="row">
+        {% block navbar %}
+        <!--Навигация по базе знаний-->
+        <nav class="col-md-3 col-lg-2 py-3 border-1 border-end">
+            <!--Разделы-->
+            {% for cat in categories %}
+            {% if cat.topics.exists %}
+                <a class="d-block link-dark text-decoration-none mt-3" data-bs-toggle="collapse"
+                aria-expanded="false"href="#{{ cat.slug }}-drop">
+                    <strong>{{ cat.title }}</strong>
+                    <img src="{% static 'image/chevron-down.svg' %}" alt="вниз">
+                    {% else %}
+                <a href="{{ cat.get_absolute_url }}" class="d-block link-dark text-decoration-none mt-3">
+                    <strong>{{ cat.title }}</strong>
+                    <img src="{% static 'image/chevron-right.svg' %}" alt="вправо">
+                </a>
+            {% endif %}
+            <div class="{% if article_curr and article_curr.topic.category == cat or topic_curr.category == cat %}show{% else %}collapse{% endif %} ps-3" id="{{ cat.slug }}-drop">
+                {% for topic in cat.topics.all %}
+                    {% if topic.has_published_articles.exists %}
+                    <a href="#{{ topic.slug }}-drop" class="d-block link-dark text-decoration-none py-1"
+                    data-bs-toggle="collapse" aria-expanded="false">
+                        {{ topic.title }}
+                        <img src="{% static 'image/chevron-down.svg' %}" alt="вниз">
+                    </a>
+                    {% else %}
+                    <a href="{{ topic.get_absolute_url }}" class="d-block link-dark text-decoration-none py-1">
+                        {{ topic.title }}
+                        <img src="{% static 'image/chevron-right.svg' %}" alt="вправо">
+                    </a>
+                    {% endif %}
+                    <div class="{% if article_curr and article_curr.topic == topic %}show{% else %}collapse{% endif %}" id="{{ topic.slug }}-drop">
+                        {% for article in topic.has_published_articles %}
+                            <div class="ps-3" id="{{ article.slug }}-drop">
+                                <a href="{{ article.get_absolute_url }}" class="d-block link-secondary text-decoration-none py-1">
+                                    {{ article.title }}
+                                    <img src="{% static 'image/chevron-right.svg' %}" alt="вправо">
+                                </a>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+            </div>
+            {% empty %}
+                <p class="text-muted">Нет доступных материалов</p>
+            {% endfor %}
+        </nav>
+        {% endblock navbar %}
+        <!-- Основной контент -->
+        <main class="col">
+            {% block content %}
+            {% endblock %}
+        </main>
+    </div>
+</div>
+
+{% if user.is_authenticated %}
+    {% add_category_form %}
+{% endif %}
+
+{% block js %}
+{% endblock js %}
+</body>
+</html>

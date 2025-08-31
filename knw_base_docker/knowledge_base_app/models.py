@@ -1,0 +1,76 @@
+from django.contrib.auth import get_user_model
+from django.db import models
+from django.urls import reverse
+from ckeditor_uploader.fields import RichTextUploadingField
+from django.utils.html import strip_tags
+
+class PublishedArticleManager(models.Manager):
+    def get_queryset(self) -> models.QuerySet:
+        return super().get_queryset().filter(published=True).select_related('topic')
+
+class Article(models.Model):
+    title = models.CharField(max_length=250, verbose_name="Название статьи")
+    slug = models.SlugField(max_length=200, unique=True, verbose_name="URL-адрес статьи")
+    topic = models.ForeignKey(to="Topic", on_delete=models.CASCADE, related_name="articles", verbose_name="Тема статьи")
+    author = models.ForeignKey(to=get_user_model(), on_delete=models.CASCADE, related_name="articles", verbose_name="Автор статьи")
+    content = RichTextUploadingField(blank=True, verbose_name="Содержимое статьи")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
+    published = models.BooleanField(default=False, verbose_name="Опубликовано")
+
+    objects = models.Manager()
+    published_manager = PublishedArticleManager()
+
+    def __str__(self):
+        return self.title
+
+    def get_absolute_url(self):
+        return reverse("knowledge_base_app:article-detail", kwargs={"slug": self.slug})
+
+    def get_plain_content(self):
+        return strip_tags(self.content)
+
+    class Meta:
+        ordering = ['title']
+        verbose_name = "Статья"
+        verbose_name_plural = "Статьи"
+        
+
+class Topic(models.Model):
+    title = models.CharField(max_length=250, verbose_name="Название темы")
+    slug = models.SlugField(max_length=200, unique=True, verbose_name="URL-адрес темы")
+    category = models.ForeignKey(to="Category", on_delete=models.CASCADE, related_name="topics", verbose_name="Раздел темы")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
+
+    def __str__(self):
+        return self.title
+    
+    def has_published_articles(self):
+        return self.articles.filter(published=True) # type: ignore
+
+    def get_absolute_url(self):
+        return reverse("knowledge_base_app:topic-detail", kwargs={"slug": self.slug})
+
+    class Meta:
+        ordering = ['title']
+        verbose_name = "Тема"
+        verbose_name_plural = "Темы"
+
+
+class Category(models.Model):
+    title = models.CharField(max_length=250, verbose_name="Название раздела")
+    slug = models.SlugField(max_length=200, unique=True, verbose_name="URL-адрес раздела")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
+
+    def __str__(self):
+        return self.title
+
+    def get_absolute_url(self):
+        return reverse("knowledge_base_app:category-detail", kwargs={"slug": self.slug})
+
+    class Meta:
+        ordering = ['title']
+        verbose_name = "Раздел"
+        verbose_name_plural = "Разделы"

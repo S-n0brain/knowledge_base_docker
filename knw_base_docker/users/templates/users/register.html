@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block navbar %}
+{% endblock %}
+{% block content %}
+<div class="container mx-5 my-5 w-50">
+    <h2 class="my-4">Регистрация</h2>
+    <p>
+        * - обязательные поля
+    </p>
+    <form method="post" class='w-75'>
+        {% csrf_token %}
+        {% for field in form %}
+            <div class="my-2">
+                <label class="form-label my-2" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                <div class="invalid-feedback my-2">
+                    {{ field.errors }}
+                </div>
+            </div>
+        {% endfor %}
+        <div class="my-2">{{ form.non_field_errors }}</div>
+        <button type="submit" class="btn btn-dark mt-3" id="register-btn">Регистрация</button>
+    </form>
+{% endblock %}
+{% block js %}
+<script>
+    const checkAdmin = document.querySelector('#is_admin');
+    const form = document.querySelector('form');
+    const adminCodeField = document.querySelector('#admin_code');
+    const registerBtn = document.querySelector('#register-btn');
+
+    adminCodeField.parentElement.classList.add('d-none');
+
+    if (checkAdmin.checked) {
+        adminCodeField.parentElement.classList.remove('d-none');
+    }
+
+    checkAdmin.addEventListener('change', () => {
+        if (checkAdmin.checked) {
+            adminCodeField.parentElement.classList.remove('d-none');
+        } else {
+            adminCodeField.parentElement.classList.add('d-none');
+        }
+    });
+</script>
+{% endblock js %}
