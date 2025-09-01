@@ -25,7 +25,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", ' ').split(" ")
 # INTERNAL_IPS = ["127.0.0.1"]
@@ -164,7 +164,7 @@ LOGIN_REDIRECT_URL = 'knowledge_base_app:index'
 LOGIN_URL = 'users:login'
 LOGOUT_REDIRECT_URL = 'users:login'
 
-ADMIN_CREATION_CODE = '123'
+ADMIN_CREATION_CODE = 'admin'
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = "smtp.mail.ru" #'smtp.gmail.com'
@@ -241,8 +241,17 @@ CKEDITOR_CONFIGS = {
     }
 }
 
+# Подключение к контейнеру elasticsearch
 ELASTICSEARCH_DSL = {
     'default': {
-        'hosts': 'http://localhost:9200'
+        'hosts': 'http://elasticsearch:9200'
     },
+}
+
+# Настройки кэша Redis
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": "redis://redis:6379/1", 
+    }
 }

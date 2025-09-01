@@ -28,8 +28,8 @@
             <div class="mb-3">
                 {{ field.label_tag }}
                 {{ field }}
-                {% if field.help_text %}
-                    <small class="form-text text-muted">{{ field.help_text }}</small>
+                {% if user.date_birth and field == form.date_birth %}
+                    <small class="form-text text-muted">Дата рождения: {{ user.date_birth|date:"d.m.Y" }}</small>
                 {% endif %}
             </div>
             {% if field.errors %}

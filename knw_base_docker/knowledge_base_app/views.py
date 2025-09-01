@@ -1,4 +1,5 @@
 from typing import Any
+from django.core.cache import cache
 from django.db.models.query import QuerySet
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
@@ -34,6 +35,13 @@ def add_topic(request: HttpRequest) -> HttpResponse:
             return redirect('knowledge_base_app:topic-detail', slug=topic.slug)
     return redirect(request.META.get('HTTP_REFERER', 'knowledge_base_app:index'))
 
+def get_cached_categories():
+    key = "categories_with_topics_articles"
+    categories = cache.get(key)
+    if categories is None:
+        categories = Category.objects.prefetch_related("topics__articles").all()
+        cache.set(key, categories, 60*3)  # кэш на 3 минуты
+    return categories
 
 class IndexView(TemplateView):
     title = "Главная страница"
@@ -46,10 +54,19 @@ class IndexView(TemplateView):
     }
     template_name = 'knowledge_base_app/index.html'
 
+    @staticmethod
+    def get_cached_last_articles():
+        key = "last_articles"
+        last_articles = cache.get(key)
+        if last_articles is None:
+            last_articles = Article.published_manager.order_by('-updated_at').select_related('topic')[:4]
+            cache.set(key, last_articles, 60*3)  # кэш на 3 минуты
+        return last_articles
+
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context =  super().get_context_data(**kwargs)
-        context['categories'] = Category.objects.prefetch_related('topics__articles')
-        context['last_articles'] = Article.published_manager.order_by('-updated_at').select_related('topic')[:4]
+        context['categories'] = get_cached_categories() #Category.objects.prefetch_related('topics__articles')
+        context['last_articles'] = self.get_cached_last_articles() # type: ignore
         return context
 
 class ArticleDetailView(DetailView):
@@ -61,7 +78,7 @@ class ArticleDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         context['category_curr'] = self.get_object().topic.category # type: ignore
         context['topic_curr'] = self.get_object().topic # type: ignore
-        context['categories'] = Category.objects.prefetch_related('topics__articles')
+        context['categories'] = get_cached_categories() # Category.objects.prefetch_related('topics__articles')
         return context
     
     def post(self, request, *args, **kwargs):
@@ -84,7 +101,7 @@ class CategoryDetailView(ModelFormMixin, DetailView):
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
-        context['categories'] = Category.objects.prefetch_related('topics__articles')
+        context['categories'] = get_cached_categories() #Category.objects.prefetch_related('topics__articles')
         context['form'] = self.get_form_class()(instance=self.get_object())
         context['topic_form'] = self.topic_form_class()
         return context
@@ -138,7 +155,7 @@ class TopicDetailView(ModelFormMixin, DetailView):
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
-        context['categories'] = Category.objects.prefetch_related('topics__articles')
+        context['categories'] = get_cached_categories() # Category.objects.prefetch_related('topics__articles')
         context['form'] = self.get_form_class()(instance=self.get_object())
         return context
 
@@ -199,7 +216,7 @@ class ArticleAddView(PermissionRequiredMixin, CreateView):
     def get_context_data(self, **kwargs) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
         context['title'] = 'Добавление и редактирование статьи'
-        context["categories"] = Category.objects.prefetch_related('topics__articles')
+        context["categories"] = get_cached_categories() # Category.objects.prefetch_related('topics__articles')
         return context
 
 
@@ -222,7 +239,7 @@ class ArticleUpdateView(PermissionRequiredMixin, UpdateView):
     def get_context_data(self, **kwargs) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
         context['title'] = 'Добавление и редактирование статьи'
-        context["categories"] = Category.objects.prefetch_related('topics__articles')
+        context["categories"] = get_cached_categories() # Category.objects.prefetch_related('topics__articles')
         return context
     
 
@@ -235,7 +252,7 @@ class ArticleSearchView(FormView, ListView):
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
         context['form_search'] = self.get_form_class()(self.request.GET)
-        context["categories"] = Category.objects.prefetch_related('topics__articles')
+        context["categories"] = get_cached_categories() # Category.objects.prefetch_related('topics__articles')
         context['title'] = 'Поиск статей'
         return context
     
