@@ -3,11 +3,11 @@ services:
     image: postgres:17.6-alpine
     container_name: postgresql
     environment:
-      - POSTGRES_USER=$(DATABASE_USER)
-      - POSTGRES_PASSWORD=$(DATABASE_PASSWORD)
-      - POSTGRES_DB=$(DATABASE_NAME)
+      - POSTGRES_USER=${DATABASE_USER}
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
+      - POSTGRES_DB=${DATABASE_NAME}
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - postgresql-data:/var/lib/postgresql/data
     networks:
       - knows_net
 
@@ -44,7 +44,7 @@ services:
     image: knowledge_base_django
     container_name: knowledge_base_django_con
     env_file:
-      - ./knw_base_docker/.env
+      - .env
     command: "gunicorn -c gunicorn.py knowledge_base.wsgi"
     restart: always
     ports:
@@ -86,7 +86,6 @@ services:
 networks:
       knows_net:
         driver: bridge
-
 volumes:
-  postgres-data:
+  postgresql-data:
   elasticsearch-data:
