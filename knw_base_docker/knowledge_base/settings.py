@@ -164,7 +164,7 @@ LOGIN_REDIRECT_URL = 'knowledge_base_app:index'
 LOGIN_URL = 'users:login'
 LOGOUT_REDIRECT_URL = 'users:login'
 
-ADMIN_CREATION_CODE = 'admin'
+ADMIN_CREATION_CODE = os.environ.get('ADMIN_CREATION_CODE')
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = "smtp.mail.ru" #'smtp.gmail.com'
@@ -172,7 +172,7 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'purtov22.22@mail.ru' # 'koltafvhdgv@gmail.com'
 # ziisj7NWWWJS3Ph4DDK2
-EMAIL_HOST_PASSWORD = 'ziisj7NWWWJS3Ph4DDK2' #'felw ehev gbge fgxs'  
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD') #'felw ehev gbge fgxs'  
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 
@@ -255,3 +255,5 @@ CACHES = {
         "LOCATION": "redis://redis:6379/1", 
     }
 }
+
+API_GPT_KEY = os.environ.get('API_GPT_KEY')

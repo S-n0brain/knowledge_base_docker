@@ -56,7 +56,7 @@ services:
       - elasticsearch
     links:
       - "postgres:dbps"
-    volumes:
+    volumes: # В проде - убрать
       - ./knw_base_docker:/www/app
 
   nginx:

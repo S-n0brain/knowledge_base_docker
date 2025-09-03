@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}404 - Не найдено{% endblock title %}
+{% block navbar %}{% endblock navbar %}
+{% block content %}
+<div class="container px-5 py-5 text-center m-auto">
+    <h1>404 - Не найдено</h1>
+    <p>Запрашиваемая страница не найдена.</p>
+    <a href='{% url "knowledge_base_app:index" %}' class="btn btn-dark btn-sm">На главную</a>
+</div>
+{% endblock content %}
