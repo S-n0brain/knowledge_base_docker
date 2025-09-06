@@ -25,7 +25,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", ' ').split(" ")
 # INTERNAL_IPS = ["127.0.0.1"]
@@ -35,6 +35,7 @@ ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", ' ').split(" ")
 INSTALLED_APPS = [
     'knowledge_base_app',
     'users',
+    'chatbot',
 
     'django.contrib.admin',
     'django.contrib.auth',

@@ -41,3 +41,5 @@ redis==6.2.0
 
 gevent==25.8.1
 gunicorn==23.0.0
+
+openai==1.104.2
