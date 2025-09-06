@@ -1,6 +1,7 @@
 import json
 from django.http import JsonResponse
 from django.views.generic import DetailView
+from httpx import delete
 from openai import OpenAI
 from knowledge_base.settings import API_GPT_KEY
 from .forms import ChatForm
@@ -30,31 +31,35 @@ class ChatView(LoginRequiredMixin, DetailView):
 
     def post(self, *args, **kwargs) -> JsonResponse:
         data = json.loads(self.request.body)
-        message = data.get("message", "")
-        if message:
-            try:
-                client = self.get_client()
-            except Exception:
-                return JsonResponse({"error": f"Ошибка получения клиента"}, status=500)
-            try:
-                history = [{"role": mes.role, "content": mes.content}
-                           for mes in Message.objects.filter(chat=self.get_object()).order_by('-created_at')[:self.COUNTS_MESSAGE_HISTORY:-1]]
-                print(f'history: {history}')
-                response = client.responses.create(
-                model="gpt-5-nano",
-                input=history + [{"role": "user", "content": message}], # type: ignore
-                max_output_tokens=250,
-                reasoning={
-                    "effort": "minimal",
-                },
-                text={
-                    "verbosity": "low"
-                })
-            except Exception:
-                return JsonResponse({"error": f"Ошибка получения ответа от модели"}, status=500)
-            Message.objects.create(chat=self.get_object(),
-                                             content=message, role="user")
-            Message.objects.create(chat=self.get_object(),
-                                             content=response.output_text, role="assistant")
-            return JsonResponse({"reply": response.output_text, "role": "Ассистент", "model": response.model})
+        if data.get("name") == "send_message":
+            message = data.get("message", "")
+            if message:
+                try:
+                    client = self.get_client()
+                except Exception:
+                    return JsonResponse({"error": f"Ошибка получения клиента"}, status=500)
+                try:
+                    history = [{"role": mes.role, "content": mes.content}
+                            for mes in Message.objects.filter(chat=self.get_object()).order_by('-created_at')[:self.COUNTS_MESSAGE_HISTORY:-1]]
+                    print(f'history: {history}')
+                    response = client.responses.create(
+                    model="gpt-5-nano",
+                    input=history + [{"role": "user", "content": message}], # type: ignore
+                    max_output_tokens=250,
+                    reasoning={
+                        "effort": "minimal",
+                    },
+                    text={
+                        "verbosity": "low"
+                    })
+                except Exception:
+                    return JsonResponse({"error": f"Ошибка получения ответа от модели"}, status=500)
+                Message.objects.create(chat=self.get_object(),
+                                                content=message, role="user")
+                Message.objects.create(chat=self.get_object(),
+                                                content=response.output_text, role="assistant")
+                return JsonResponse({"reply": response.output_text, "role": "Ассистент", "model": response.model})
+        elif data.get("name") == "clear_chat":
+            Message.objects.filter(chat=self.get_object()).delete()
+            return JsonResponse({"clear": True})
         return JsonResponse({"error": f"Ошибка сообщения"}, status=400)

@@ -4,10 +4,11 @@ from .models import Message
 class ChatForm(forms.ModelForm):
     content = forms.CharField(
         widget=forms.Textarea(attrs={
-            'rows': 2, 
+            'rows': 3, 
             'class': 'form-control', 
             'placeholder': 'Введите сообщение...',
             'id': 'message-input',
+            'style': 'resize: none;',
         })
     )
 
