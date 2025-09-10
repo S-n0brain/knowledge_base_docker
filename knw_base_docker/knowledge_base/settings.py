@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 import os
 from pathlib import Path
-
+from cryptography.fernet import Fernet
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -253,4 +253,9 @@ CACHES = {
     }
 }
 
+# Ключ ProxyAPI
 API_GPT_KEY = os.environ.get('API_GPT_KEY')
+
+# Ключ для шифрования сообщений
+FERNET_KEY = os.environ.get('FERNET_KEY')
+cipher = Fernet(FERNET_KEY.encode()) # type: ignore

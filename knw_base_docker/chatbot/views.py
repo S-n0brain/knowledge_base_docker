@@ -68,8 +68,8 @@ class ChatView(LoginRequiredMixin, DetailView):
             if message and type(message) is str and self.get_balance_proxy_api() > 0:
                 try:
                     # Получаем токены пользователя
-                    user_tokens_object = UserDailyTokens.objects.get(user=self.request.user)
-                except UserDailyTokens.DoesNotExist:
+                    user_tokens_object: UserDailyTokens = UserDailyTokens.objects.get_or_create(user=self.request.user)[0]
+                except:
                     user_tokens = 0
                 else:
                     user_tokens = user_tokens_object.tokens_available
