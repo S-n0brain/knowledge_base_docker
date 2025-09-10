@@ -26,13 +26,13 @@
 
 <div id="chat" class="container py-5">
     <div class="row justify-content-center">
-        <div class="col col-md-11 col-lg-9 col-xxl-8">
+        <div class="col col-xl-11 col-xxl-10">
             <div class="text-end fw-bold mb-2" id="model-version">
-                
+
             </div>
-            <div id="messages" class="border rounded p-3 mb-3 d-flex flex-column" style="height: 400px; overflow-y: scroll;">
+            <div id="messages" class="border rounded p-3 mb-3 d-flex flex-column" style="height: 550px; overflow-y: scroll;">
                 {% for message in messages %}
-                    <div class="message card d-inline-flex my-2 px-3 py-2 {% if message.role == 'user' %}align-self-end{% else %}align-self-start{% endif %}">
+                    <div class="message card d-inline-flex my-2 px-3 py-3 {% if message.role == 'user' %}align-self-end bg-dark-subtle{% else %}align-self-start{% endif %}">
                         <h5 class="card-title {% if message.role == 'user' %}text-end{% else %}text-start{% endif %}">
                             {% if message.role == 'user' %}
                             {{ user.username }}
@@ -40,45 +40,69 @@
                             Ассистент
                             {% endif %}
                         </h5>
-                        <p class="card-text">
+                        <p class="card-text message-content">
                             {{ message.content }}
                         </p>
                     </div>
                     {% empty %}
-                    <h2 class="text-center" style="opacity: 0.5; height: 200px;">Для начала диалога с ассистентом отправьте первое сообщение!</h2>
+                    <h2 class="text-center" style="opacity: 0.5; height: 200px;" id="start-dialog">Для начала диалога с ассистентом отправьте первое сообщение!</h2>
                 {% endfor %}
             </div>
             <form id="message-form" method="post" class="row align-items-center justify-content-center text-center">
                 {% csrf_token %}
-                <div class="col-10">
-                    {{ form.content }}
+                <div class="col-10 ">
+                    {% if balance > 0 and user_tokens_obj.tokens_available > 0 %}{{ form.content }}
+                    {% else %}
+                    <div class="alert alert-warning text-center" role="alert">
+                        <h5>Сообщения отправить невозможно. Проблемы с Proxy API или недостаточно токенов</h5>
+                    </div>
+                    {% endif %}
                 </div>
-                <div class="col mt-2 align-self-center">
-                    <button type="submit" class="btn btn-dark mx-2 mx-xl-0"
+                <div class="col mt-2 align-self-center" id="message-buttons">
+                    <button type="submit" class="btn btn-dark mx-2 mx-xl-0" id='send-message-btn'
                     name="send_message" value="true">Отправить</button>
                     <button type="button" class="btn btn-outline-danger btn-sm mt-xl-3 mx-2 mx-xl-0"
                     data-bs-toggle="modal" data-bs-target="#modal-clearChat" id="clear-button">Очистить</button>
                 </div>
             </form>
+            <div class="text-start fw-bold my-2" id="user-tokens">
+                <p id="user-tokens-available">Осталось токенов: {{ user_tokens_obj.tokens_available }}</p>
+                <p class="text-muted">Токены начисляются каждый день</p>
+            </div>
         </div>
     </div>
 </div>
 {% endblock content %}
 {% block js %}
 <script>
+    {% if balance <= 0 or user_tokens_obj.tokens_available <= 0 %}
+        document.getElementById("message-buttons").removeChild(document.getElementById("send-message-btn"));
+    {% endif %}
     document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight;
     function sendMessage(e) {
         e.preventDefault();
         const input = document.getElementById("message-input");
         const message = input.value;
         input.value = '';
+        if (document.getElementById("start-dialog")) {
+            document.getElementById("start-dialog").style.display = "none";
+        }
+        const userMsg = document.createElement('div')
+        userMsg.classList.add("message", "card", "d-inline-flex", "my-2", "px-3", "py-2", "align-self-end", "bg-dark-subtle");
+        userMsg.innerHTML = `<h5 class="card-title text-end">{{ user.username }}</h5>
+                            <span class="card-text message-content">${message}</span>`;
+        document.getElementById("messages").appendChild(userMsg);
 
-        const userMsg = `<div class="message card d-inline-flex my-2 px-3 py-2 align-self-end">
-                            <h5 class="card-title text-end">{{ user.username }}</h5>
-                            <p class="card-text">${message}</p>
-                         </div>`;
-            document.getElementById("messages").innerHTML += userMsg;
-            document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight;
+        const loadingMsg = document.createElement("div");
+        loadingMsg.classList.add("text-center");
+        loadingMsg.id = "loading-msg";
+        loadingMsg.innerHTML = `<div class="spinner-border" style="width: 3rem; height: 3rem;" role="status">
+                                    <span class="visually-hidden">Загрузка...</span>
+                                </div>`;
+        document.getElementById("messages").appendChild(loadingMsg);
+        document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight;
+        
+
         fetch("{% url 'chatbot:chat' %}", {
              method: "POST",
              headers: {
@@ -86,34 +110,46 @@
                 "X-CSRFToken": "{{ csrf_token }}",
             },
              body: JSON.stringify({ message: message, name: "send_message" })
-
         })
         .then(response => response.json())
         .then(data => {
             // добавляем ответ модели
+            if (loadingMsg) {
+                document.getElementById("messages").removeChild(loadingMsg);
+            }
             if (data.reply) {
-                const botMsg = `<div class="message card d-inline-flex my-2 px-3 py-2 align-self-start">
-                                <h5 class="card-title">${data.role}</h5>
-                                <p class="card-text">${data.reply}</p>
-                            </div>`;
-                document.getElementById("messages").innerHTML += botMsg;
-            document.getElementById("model-version").textContent = `Используется модель: ${data.model}`;
+                const botMsg = document.createElement('div');
+                botMsg.classList.add("message", "card", "d-inline-flex", "my-2", "px-3", "py-2", "align-self-start");
+                botMsg.innerHTML = `<h5 class="card-title">${data.role}</h5>
+                                    <p class="card-text message-content">${data.reply}</p>`;
+                document.getElementById("messages").appendChild(botMsg);
+                document.getElementById("model-version").textContent = `Используется модель: ${data.model}`;
+                document.getElementById("user-tokens-available").textContent = `Осталось токенов: ${data.user_tokens}`;
             } else if (data.error) {
                 // Обработка ошибки
-                const errorMsg = `<div class="message card d-inline-flex my-2 px-3 py-2 align-self-start">
-                                    <h5 class="card-title">Ошибка</h5>
-                                    <p class="card-text">${data.error}</p>
-                                </div>`;
-                document.getElementById("messages").innerHTML += errorMsg;
+                const errorMsg = document.createElement('div');
+                errorMsg.classList.add("message", "card", "d-inline-flex", "my-2", "px-3", "py-2", "align-self-start");
+                errorMsg.innerHTML = `<h5 class="card-title">Ошибка</h5>
+                                    <p class="card-text message-content">${data.error}</p>`;
+                document.getElementById("messages").appendChild(errorMsg);
+            } else if (data.no_tokens) {
+                // Обработка случая, когда токены закончились
+                const noTokensMsg = document.createElement('div');
+                noTokensMsg.classList.add("message", "card", "d-inline-flex", "my-2", "px-3", "py-2", "align-self-start");
+                noTokensMsg.innerHTML = `<h5 class="card-title">Ошибка</h5>
+                                        <p class="card-text message-content">У вас недостаточно токенов для отправки сообщения.</p>`;
+                document.getElementById("messages").appendChild(noTokensMsg);
+                document.getElementById("user-tokens-available").textContent = `Осталось токенов: ${data.user_tokens}`;
             }
+
             // скролл вниз
             document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight;
         });
     };
 
     function clearChat(e) {
+        // Очистка чата
         e.preventDefault();
-
         fetch("{% url 'chatbot:chat' %}", {
             method: "POST",
             headers: {
@@ -129,7 +165,8 @@
                 const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
                 modal.hide();
                 document.getElementById("messages").innerHTML = '<h2 class="text-center" style="opacity: 0.5; \
-        height: 200px;">Для начала диалога с ассистентом отправьте первое сообщение!</h2>';
+        height: 200px;" id="start-dialog">Для начала диалога с ассистентом отправьте первое сообщение!</h2>';
+                document.getElementById("model-version").textContent = '';
             }
         });
     }

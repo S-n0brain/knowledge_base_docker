@@ -20,6 +20,7 @@ class LoginUser(LoginView):
     template_name = 'users/login.html'
     extra_context = {'title': 'Вход'}
     next_page = reverse_lazy('knowledge_base_app:index')
+    redirect_authenticated_user = True
 
 
 class RegisterUser(CreateView):
@@ -27,7 +28,11 @@ class RegisterUser(CreateView):
     template_name = 'users/register.html'
     extra_context = {'title': "Регистрация"}
     success_url = reverse_lazy('users:login')
-
+    
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect('users:profile')
+        return super().dispatch(request, *args, **kwargs)
 
 class UserPasswordChange(PasswordChangeView):
     form_class = UserPasswordChangeForm
@@ -102,7 +107,6 @@ class UserConfirmEmailView(LoginRequiredMixin, FormView):
     
     def form_invalid(self, form) -> HttpResponse:
         return redirect('users:profile')
-
 
     def form_valid(self, form):
         user_email = form.user.email

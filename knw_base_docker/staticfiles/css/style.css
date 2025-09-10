@@ -13,3 +13,6 @@ main {
     width: 32px;
     height: 32px;
  }
+.message-content {
+    white-space: pre-line;
+ }

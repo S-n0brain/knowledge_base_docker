@@ -34,6 +34,9 @@ class Article(models.Model):
         ordering = ['title']
         verbose_name = "Статья"
         verbose_name_plural = "Статьи"
+        indexes = [
+            models.Index(fields=['title']),
+        ]
         
 
 class Topic(models.Model):

@@ -135,6 +135,7 @@ class CategoryDetailView(ModelFormMixin, DetailView):
                 return redirect('knowledge_base_app:category-detail', slug=self.object.slug) # type: ignore
             return self.form_invalid(form)
         elif request.POST.get("add_topic"):
+            # Добавление темы
             if not request.user.has_perm('knowledge_base_app.add_topic'):
                 raise PermissionDenied
             form = self.topic_form_class(request.POST)
