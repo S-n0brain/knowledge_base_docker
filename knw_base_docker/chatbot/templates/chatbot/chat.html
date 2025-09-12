@@ -35,7 +35,11 @@
                     <div class="message card d-inline-flex my-2 px-3 py-3 {% if message.role == 'user' %}align-self-end bg-dark-subtle{% else %}align-self-start{% endif %}">
                         <h5 class="card-title {% if message.role == 'user' %}text-end{% else %}text-start{% endif %}">
                             {% if message.role == 'user' %}
-                            {{ user.username }}
+                                {% if user.last_name and user.first_name %}
+                                    {{ user.last_name }} {{ user.first_name }}
+                                {% else %}
+                                    {{ user.username }}
+                                {% endif %}
                             {% else %}
                             Ассистент
                             {% endif %}
@@ -50,8 +54,9 @@
             </div>
             <form id="message-form" method="post" class="row align-items-center justify-content-center text-center">
                 {% csrf_token %}
-                <div class="col-10 ">
-                    {% if balance > 0 and user_tokens_obj.tokens_available > 0 %}{{ form.content }}
+                <div class="col-10" id="message-input-container">
+                    {% if balance > 0 and user_tokens_obj.tokens_available > 0 %}
+                        {{ form.content }}
                     {% else %}
                     <div class="alert alert-warning text-center" role="alert">
                         <h5>Сообщения отправить невозможно. Проблемы с Proxy API или недостаточно токенов</h5>
@@ -76,7 +81,11 @@
 {% block js %}
 <script>
     {% if balance <= 0 or user_tokens_obj.tokens_available <= 0 %}
-        document.getElementById("message-buttons").removeChild(document.getElementById("send-message-btn"));
+        const mesBtns = document.getElementById("message-buttons");
+        const mesNtn = document.getElementById("send-message-btn");
+        if (mesNtn) {
+            mesBtns.removeChild(mesNtn);
+        }
     {% endif %}
     document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight;
     function sendMessage(e) {
@@ -140,6 +149,19 @@
                                         <p class="card-text message-content">У вас недостаточно токенов для отправки сообщения.</p>`;
                 document.getElementById("messages").appendChild(noTokensMsg);
                 document.getElementById("user-tokens-available").textContent = `Осталось токенов: ${data.user_tokens}`;
+                const mesInput = document.getElementById("message-input");
+                if (mesInput) {
+                    mesInput.classList.add("d-none");
+                }
+                const mesInputContainer = document.getElementById("message-input-container");
+                mesInputContainer.innerHTML = `<div class="alert alert-warning text-center" role="alert">
+                        <h5>Сообщения отправить невозможно. Проблемы с Proxy API или недостаточно токенов</h5>
+                    </div>`;
+                    const mesBtns = document.getElementById("message-buttons");
+                    const mesNtn = document.getElementById("send-message-btn");
+                    if (mesNtn) {
+                        mesBtns.removeChild(mesNtn);
+                    }
             }
 
             // скролл вниз

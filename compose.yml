@@ -40,8 +40,8 @@ services:
       - elasticsearch-data:/usr/share/elasticsearch/data
 
   knowledge_base_django:
-    build: ./knw_base_docker
-    image: knowledge_base_django
+    # build: ./knw_base_docker
+    image: n0brains/knowledge_base_django:latest
     container_name: knowledge_base_django_con
     env_file:
       - .env

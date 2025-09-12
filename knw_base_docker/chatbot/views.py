@@ -36,12 +36,15 @@ class ChatView(LoginRequiredMixin, DetailView):
         chat, created = Chat.objects.get_or_create(user=user)
         if created:
             # Если чат был создан, добавим в бд информацию о токенах пользователя
-            UserDailyTokens.objects.create(user=user, tokens_available=self.TOKENS_PER_DAY)
+            if not UserDailyTokens.objects.filter(user=user).exists():
+                UserDailyTokens.objects.create(user=user, tokens_available=self.TOKENS_PER_DAY)
         return chat
 
     def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         chat = self.get_object()
         self.delete_old_messages(chat)
+        user_tokens_object: UserDailyTokens = UserDailyTokens.objects.get(user=self.request.user)
+        self.update_everyday_user_tokens(user_tokens_object)
         return super().get(request, *args, **kwargs)
 
     @classmethod

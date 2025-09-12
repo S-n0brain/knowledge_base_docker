@@ -41,7 +41,9 @@ class UserRegistrationForm(UserCreationForm, IsValidForm):
     password1 = forms.CharField(label="Пароль", widget=forms.PasswordInput(attrs={'class': 'form-control'}))
     password2 = forms.CharField(label="Повтор пароля", widget=forms.PasswordInput(attrs={'class': 'form-control'}))
     is_admin = forms.BooleanField(label="Администратор", required=False, widget=forms.CheckboxInput(attrs={'class': 'form-check-input', 'id': 'is_admin'}))
-    admin_code = forms.CharField(label="Код администратора", required=False, widget=forms.TextInput(attrs={'class': 'form-control', 'id': 'admin_code'}))
+    admin_code = forms.CharField(label="Код администратора", required=False,
+                                 widget=forms.PasswordInput(attrs={'class': 'form-control', 'id': 'admin_code'}),
+                                 validators=[])
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

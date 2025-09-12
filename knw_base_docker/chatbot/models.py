@@ -55,3 +55,7 @@ class UserDailyTokens(models.Model):
 
     def __str__(self) -> str:
         return f'{self.user.username}: Токены {self.tokens_available} на {self.date}'
+    
+    class Meta:
+        verbose_name = "Токены пользователя"
+        verbose_name_plural = "Токены пользоваетелй"
