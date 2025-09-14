@@ -1,8 +1,10 @@
 from django.contrib.auth import get_user_model
-from django.db import models
+from django.db import migrations, models
 from django.urls import reverse
 from ckeditor_uploader.fields import RichTextUploadingField
 from django.utils.html import strip_tags
+from pgvector.django import VectorExtension
+from pgvector.django import VectorField
 
 class PublishedArticleManager(models.Manager):
     def get_queryset(self) -> models.QuerySet:
@@ -77,3 +79,12 @@ class Category(models.Model):
         ordering = ['title']
         verbose_name = "Раздел"
         verbose_name_plural = "Разделы"
+
+class Migration(migrations.Migration):
+    operations = [
+        VectorExtension()
+    ]
+
+class ArticleChunk(models.Model):
+    article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name="chunks", verbose_name="Статья")
+    embedding = VectorField(dimensions=1536, null=True, verbose_name="Векторное представление")

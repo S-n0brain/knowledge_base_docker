@@ -30,6 +30,7 @@ class Message(models.Model):
 
     @property
     def content(self):
+        # Расшифровываем и возвращаем содержимое сообщения
         if self._content:
             try:
                 return cipher.decrypt(self._content).decode()
@@ -39,6 +40,7 @@ class Message(models.Model):
 
     @content.setter
     def content(self, value):
+        # Шифруем и сохраняем содержимое сообщения
         self._content = cipher.encrypt(value.encode())
 
     class Meta:
@@ -59,3 +61,5 @@ class UserDailyTokens(models.Model):
     class Meta:
         verbose_name = "Токены пользователя"
         verbose_name_plural = "Токены пользоваетелй"
+    
+    
