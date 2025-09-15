@@ -3,7 +3,6 @@ from django.db import migrations, models
 from django.urls import reverse
 from ckeditor_uploader.fields import RichTextUploadingField
 from django.utils.html import strip_tags
-from pgvector.django import VectorExtension
 from pgvector.django import VectorField
 
 from openai import OpenAI
@@ -123,11 +122,6 @@ class Category(models.Model):
         ordering = ['title']
         verbose_name = "Раздел"
         verbose_name_plural = "Разделы"
-
-class Migration(migrations.Migration):
-    operations = [
-        VectorExtension()
-    ]
 
 class ArticleChunk(models.Model):
     article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name="chunks", verbose_name="Статья")

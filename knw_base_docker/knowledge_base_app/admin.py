@@ -1,9 +1,8 @@
-from typing import Any
 from django import forms
 from django.contrib import admin
 from django.db.models.query import QuerySet
 from django.http import HttpRequest
-from .models import Article, Topic, Category
+from .models import Article, ArticleChunk, Topic, Category
 
 
 class ArticleFormAdmin(forms.ModelForm):
@@ -79,3 +78,5 @@ class CategoryAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('title',)}
     inlines = [TopicInline]
 
+admin.site.site_header = "Панель администратора базы знаний"
+admin.site.register(ArticleChunk)

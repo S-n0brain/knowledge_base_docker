@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:17.6-alpine
+    image: pgvector/pgvector:pg17-trixie # postgres:17.6-alpine
     container_name: postgresql
     environment:
       - POSTGRES_USER=${DATABASE_USER}
