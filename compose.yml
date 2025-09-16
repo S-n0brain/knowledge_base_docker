@@ -82,6 +82,8 @@ services:
       - "6379:6379"
     networks:
       - knows_net
+    depends_on:
+      - knowledge_base_django
 
 networks:
       knows_net:

@@ -24,6 +24,7 @@ class Message(models.Model):
                                       verbose_name='Дата и время создания')
     role = models.CharField(max_length=10, choices=[('user', 'Пользователь'), ('assistant', 'Ассистент')],
                             default='user', verbose_name='Роль')
+    is_rag = models.BooleanField(verbose_name='Является RAG?', default=False)
 
     def __str__(self) -> str:
         return f'Сообщение {self.pk} от {self.role} в чате {self.chat.pk} | {self._content if self._content else ""}'

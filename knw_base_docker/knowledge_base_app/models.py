@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.db import migrations, models
+from django.db import models
 from django.urls import reverse
 from ckeditor_uploader.fields import RichTextUploadingField
 from django.utils.html import strip_tags
@@ -66,11 +66,10 @@ class Article(models.Model):
 
     def save(self, *args, **kwargs):
         # Сохранение модели с генерацией векторного представления
-        if self.pk:
-            try:
-                old_content = Article.objects.get(pk=self.pk).content
-            except Article.DoesNotExist:
-                old_content = None
+        try:
+            old_content = Article.objects.get(pk=self.pk).content
+        except Article.DoesNotExist:
+            old_content = None
         super().save(*args, **kwargs)
         if not self.pk or (self.content != old_content):
             self.create_article_chunks()

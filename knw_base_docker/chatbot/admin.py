@@ -3,7 +3,7 @@ from .models import Chat, Message, UserDailyTokens
 
 @admin.register(Message)
 class MessageAdmin(admin.ModelAdmin):
-    list_display = ['id', 'chat', 'role', 'view_message', 'created_at']
+    list_display = ['id', 'chat', 'role', 'is_rag', 'view_message', 'created_at']
     list_display_links = ['id', 'chat']
     list_per_page = 50
 

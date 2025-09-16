@@ -27,6 +27,12 @@
 <div id="chat" class="container py-5">
     <div class="row justify-content-center">
         <div class="col col-xl-11 col-xxl-10">
+            <div class="mx-auto my-2 text-center">
+                <form method="get" id="form-rag">
+                    <input type="checkbox" name="input-rag" id="rag">
+                    <label for="rag">Использовать чат как RAG-систему</label>
+                </form>
+            </div>
             <div class="text-end fw-bold mb-2" id="model-version">
 
             </div>
@@ -41,7 +47,7 @@
                                     {{ user.username }}
                                 {% endif %}
                             {% else %}
-                            Ассистент
+                            Ассистент {% if message.is_rag %}(RAG){% endif %}
                             {% endif %}
                         </h5>
                         <p class="card-text message-content">
@@ -80,11 +86,12 @@
 {% endblock content %}
 {% block js %}
 <script>
+    const mesBtn = document.getElementById("send-message-btn");
     {% if balance <= 0 or user_tokens_obj.tokens_available <= 0 %}
+        // У вас недостаточно токенов для отправки сообщений
         const mesBtns = document.getElementById("message-buttons");
-        const mesNtn = document.getElementById("send-message-btn");
-        if (mesNtn) {
-            mesBtns.removeChild(mesNtn);
+        if (mesBtn) {
+            mesBtns.removeChild(mesBtn);
         }
     {% endif %}
     document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight;
@@ -98,9 +105,17 @@
         }
         const userMsg = document.createElement('div')
         userMsg.classList.add("message", "card", "d-inline-flex", "my-2", "px-3", "py-2", "align-self-end", "bg-dark-subtle");
-        userMsg.innerHTML = `<h5 class="card-title text-end">{{ user.username }}</h5>
+        userMsg.innerHTML = `<h5 class="card-title text-end">
+                                {% if user.last_name and user.first_name %}
+                                    {{ user.first_name }} {{ user.last_name }}
+                                {% else %}
+                                    {{ user.username }}
+                                {% endif %}
+                            </h5>
                             <span class="card-text message-content">${message}</span>`;
         document.getElementById("messages").appendChild(userMsg);
+
+        mesBtn.disabled = true;
 
         const loadingMsg = document.createElement("div");
         loadingMsg.classList.add("text-center");
@@ -111,6 +126,8 @@
         document.getElementById("messages").appendChild(loadingMsg);
         document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight;
         
+        // Использовать ли RAG
+        const useRag = document.getElementById("rag").checked;
 
         fetch("{% url 'chatbot:chat' %}", {
              method: "POST",
@@ -118,10 +135,11 @@
                 "Content-Type": "application/json",
                 "X-CSRFToken": "{{ csrf_token }}",
             },
-             body: JSON.stringify({ message: message, name: "send_message" })
+             body: JSON.stringify({ message: message, name: "send_message", use_rag: useRag })
         })
         .then(response => response.json())
         .then(data => {
+            mesBtn.disabled = false;
             // добавляем ответ модели
             if (loadingMsg) {
                 document.getElementById("messages").removeChild(loadingMsg);
@@ -129,8 +147,14 @@
             if (data.reply) {
                 const botMsg = document.createElement('div');
                 botMsg.classList.add("message", "card", "d-inline-flex", "my-2", "px-3", "py-2", "align-self-start");
-                botMsg.innerHTML = `<h5 class="card-title">${data.role}</h5>
+                if (data.is_rag) {
+                    botMsg.innerHTML = `<h5 class="card-title">${data.role} (RAG)</h5>
                                     <p class="card-text message-content">${data.reply}</p>`;
+                } else {
+                    botMsg.innerHTML = `<h5 class="card-title">${data.role}</h5>
+                                    <p class="card-text message-content">${data.reply}</p>`;
+                }
+                
                 document.getElementById("messages").appendChild(botMsg);
                 document.getElementById("model-version").textContent = `Используется модель: ${data.model}`;
                 document.getElementById("user-tokens-available").textContent = `Осталось токенов: ${data.user_tokens}`;
