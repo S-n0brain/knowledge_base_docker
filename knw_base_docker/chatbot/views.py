@@ -6,7 +6,6 @@ from django.views.generic import DetailView
 from openai import OpenAI
 from openai.types.responses.response import Response
 from requests import request
-from traitlets import Bool
 from knowledge_base.settings import API_GPT_KEY
 from .forms import ChatForm
 from .models import Chat, Message, UserDailyTokens
