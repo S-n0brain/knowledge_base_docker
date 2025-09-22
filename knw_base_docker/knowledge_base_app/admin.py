@@ -42,14 +42,14 @@ class ArticleInline(admin.StackedInline):
 
 @admin.register(Topic)
 class TopicAdmin(admin.ModelAdmin):
-    list_display = ['title', 'category', 'created_at']
+    list_display = ['title', 'category', 'author', 'created_at']
     search_fields = ['title', 'category']
     list_editable = ['category']
-    list_filter = ['category','created_at']
+    list_filter = ['category', 'author', 'created_at']
     list_per_page = 10
 
     save_on_top = True
-    fields = ['title', 'slug', 'category']
+    fields = ['title', 'slug', 'category', 'author']
     prepopulated_fields = {'slug': ('title',)}
     inlines = [ArticleInline]
 
@@ -58,7 +58,7 @@ class TopicInline(admin.StackedInline):
     model = Topic
     extra = 0
     show_change_link = True
-    fields = ['title', 'slug', 'category']
+    fields = ['title', 'slug', 'category', 'author']
     prepopulated_fields = {'slug': ('title',)}
 
     def get_queryset(self, request: HttpRequest) -> QuerySet:

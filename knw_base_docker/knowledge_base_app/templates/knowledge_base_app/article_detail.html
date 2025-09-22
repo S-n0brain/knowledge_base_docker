@@ -4,7 +4,6 @@
 {% block content %}
 
 {% load my_tags %}
-{% get_user_is_admin_or_superuser user as user_is_admin_or_superuser %}
 
 {% if user.is_authenticated %}
 <div class="modal" tabindex="-1" aria-labelledby="modallabel{{ article_curr.slug }}" aria-hidden="true" id="modal{{ article_curr.slug }}">
@@ -37,7 +36,9 @@
         <p class="text-muted"><strong>Раздел:</strong> {{ category_curr.title }}</p>
         <p class="text-muted"><strong>Тема:</strong> {{ topic_curr.title }}</p>
         <p class="text-muted"><strong>Дата добавления:</strong> {{ article_curr.created_at|date:"d.m.Y" }}</p>
+        <p class="text-muted"><strong>Автор:</strong> {% if article_curr.author and article_curr.author.first_name and article_curr.author.last_name %}{{ article_curr.author.last_name }} {{ article_curr.author.first_name }}{% else %}{{ article_curr.author }}{% endif %}</p>
         {% if user.is_authenticated %}
+        {% get_user_is_admin_or_superuser user as user_is_admin_or_superuser %}
         {% if perms.knowledge_base_app.change_article and article_curr.author == user or user_is_admin_or_superuser %}
           <p>
               <a href="{% url 'knowledge_base_app:article-update' article_curr.slug %}"

@@ -89,6 +89,8 @@ class Topic(models.Model):
     category = models.ForeignKey(to="Category", on_delete=models.CASCADE, related_name="topics", verbose_name="Раздел темы")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
+    author = models.ForeignKey(to=get_user_model(), on_delete=models.CASCADE, related_name="topics", verbose_name="Автор темы",
+                               null=True, blank=True)
 
     def __str__(self):
         return self.title

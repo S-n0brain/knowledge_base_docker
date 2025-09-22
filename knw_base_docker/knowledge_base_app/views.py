@@ -35,6 +35,7 @@ def add_topic(request: HttpRequest) -> HttpResponse:
         if form.is_valid():
             topic = form.save(commit=False)
             topic.slug = form.cleaned_data['slug']
+            topic.author = request.user
             topic.save()
             return redirect('knowledge_base_app:topic-detail', slug=topic.slug)
     return redirect(request.META.get('HTTP_REFERER', 'knowledge_base_app:index'))
@@ -151,6 +152,7 @@ class CategoryDetailView(ModelFormMixin, DetailView):
                 topic = form.save(commit=False)
                 topic.category = self.get_object()
                 topic.slug = form.cleaned_data['slug']
+                topic.author = request.user
                 topic.save()
                 return  redirect('knowledge_base_app:category-detail', slug=topic.category.slug) # type: ignore
             return self.get(request, *args, **kwargs)
@@ -168,18 +170,21 @@ class TopicDetailView(ModelFormMixin, DetailView):
         context['form'] = self.get_form_class()(instance=self.get_object())
         return context
 
+    def get_object(self, queryset=None) -> Topic:
+        return super().get_object(queryset)  # type: ignore
+
     def post(self, request, *args, **kwargs):
         # Обработка удаления статьи
         if request.POST.get("delete_article"):
-            if not request.user.has_perm('knowledge_base_app.delete_article'):
-                raise PermissionDenied
             article_slug = request.POST.get('delete_article')
             article = get_object_or_404(Article, slug=article_slug)
+            if not request.user.has_perm('knowledge_base_app.delete_article') or not get_user_is_admin_or_superuser(self.request.user) and article.author != self.request.user:
+                raise PermissionDenied
             article.delete()
             return redirect('knowledge_base_app:topic-detail', slug=self.get_object().slug) # type: ignore
         # Обработка удаления темы
         elif request.POST.get("delete_topic"):
-            if not request.user.has_perm('knowledge_base_app.delete_topic'):
+            if not request.user.has_perm('knowledge_base_app.delete_topic') or not get_user_is_admin_or_superuser(self.request.user) and self.get_object().author != self.request.user:
                 raise PermissionDenied
             self.object = self.get_object()
             category_slug = self.object.category.slug # type: ignore
@@ -187,7 +192,7 @@ class TopicDetailView(ModelFormMixin, DetailView):
             return redirect('knowledge_base_app:category-detail', slug=category_slug) # type: ignore
         # Обработка редактирования темы
         elif request.POST.get("edit_topic"):
-            if not request.user.has_perm('knowledge_base_app.change_topic'):
+            if not request.user.has_perm('knowledge_base_app.change_topic') or not get_user_is_admin_or_superuser(self.request.user) and self.get_object().author != self.request.user:
                 raise PermissionDenied
             form = self.get_form_class()(request.POST, instance=self.get_object())
             self.object = self.get_object() 

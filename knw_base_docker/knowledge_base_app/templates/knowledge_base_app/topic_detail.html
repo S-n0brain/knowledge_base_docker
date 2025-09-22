@@ -3,6 +3,8 @@
 {% block title %}{{ topic_curr.title }}{% endblock %}
 {% block content %}
 
+{% load my_tags %}
+
 {% if user.is_authenticated %}
 <div class="modal" tabindex="-1" aria-labelledby="modallabel{{ topic_curr.slug }}" aria-hidden="true" id="modal{{ topic_curr.slug }}">
   <div class="modal-dialog modal-dialog-centered">
@@ -28,18 +30,20 @@
 
     <div class="container my-5 px-5">
         <h2>{{ topic_curr.title }}</h2>
+        <p class="text-muted mt-2"><strong>Автор:</strong> {% if topic_curr.author and topic_curr.author.first_name and topic_curr.author.last_name %}{{ topic_curr.author.last_name }} {{ topic_curr.author.first_name }}{% else %}{{ topic_curr.author }}{% endif %}</p>
         <p>
           <a href="{% url 'knowledge_base_app:category-detail' topic_curr.category.slug %}"
           class="my-2 text-decoration-none"><img src="{% static 'image/arrow-left.svg' %}" alt="back"> Вернуться к разделу</a>
         </p>
         {% if user.is_authenticated %}
+        {% get_user_is_admin_or_superuser user as user_is_admin_or_superuser %}
         {% if perms.knowledge_base_app.change_topic %}
         <p>
             <a href="#" class="text-decoration-none text-warning"
             data-bs-toggle="modal" data-bs-target="#modal{{ topic_curr.slug }}" id="{{ topic_curr.slug }}-edit">Изменить название темы <img src="{% static 'image/pencil-square.svg' %}" alt="edit"></a>
         </p>
         {% endif %}
-        {% if perms.knowledge_base_app.delete_topic %}
+        {% if perms.knowledge_base_app.delete_topic and topic_curr.author == user or user_is_admin_or_superuser %}
         <p>
             <a href="#" class="text-decoration-none text-danger"
             data-bs-toggle="modal" data-bs-target="#modal{{ topic_curr.slug }}" id="{{ topic_curr.slug }}">Удалить тему <img src="{% static 'image/x-circle.svg' %}" alt="delete"></a>
@@ -50,7 +54,7 @@
             {% for article in topic_curr.has_published_articles %}
               <li class="list-group-item w-75 d-flex justify-content-between">
                   <a href="{{ article.get_absolute_url }}" class="h6 link-underline link-underline-opacity-0">{{ article.title }}</a>
-                  {% if user.is_authenticated and perms.knowledge_base_app.delete_article %}
+                  {% if user.is_authenticated and perms.knowledge_base_app.delete_article and article.author == user or user_is_admin_or_superuser %}
                       <button type="submit" class="btn btn-outline-danger btn-sm d-flex align-items-center"
                       name="delete" value="{{ article.title }}" id="{{ article.slug }}"
                       data-bs-toggle="modal" data-bs-target="#modal{{ topic_curr.slug }}">
