@@ -128,5 +128,5 @@ class ArticleChunk(models.Model):
     text = models.TextField(blank=True, verbose_name="Текстовый фрагмент")
     
     class Meta:
-    	verbose_name = "Часть статьи для векторного представления"
-    	verbose_name_plural = "Части статьи для векторного представления"
+        verbose_name = "Часть статьи для векторного представления"
+        verbose_name_plural = "Части статьи для векторного представления"
