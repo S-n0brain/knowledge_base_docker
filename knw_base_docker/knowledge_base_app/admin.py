@@ -67,14 +67,14 @@ class TopicInline(admin.StackedInline):
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ['title', 'created_at']
+    list_display = ['title', 'author', 'created_at']
     search_fields = ['title']
-    list_filter = ['created_at']
+    list_filter = ['author', 'created_at']
     list_per_page = 10
 
 
     save_on_top = True
-    fields = ['title', 'slug']
+    fields = ['title', 'slug', 'author']
     prepopulated_fields = {'slug': ('title',)}
     inlines = [TopicInline]
 

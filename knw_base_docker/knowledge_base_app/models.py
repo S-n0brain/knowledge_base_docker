@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
 from django.db import models
 from django.urls import reverse
 from ckeditor_uploader.fields import RichTextUploadingField
@@ -112,12 +113,22 @@ class Category(models.Model):
     slug = models.SlugField(max_length=200, unique=True, verbose_name="URL-адрес раздела")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
+    author = models.ForeignKey(to=get_user_model(), on_delete=models.CASCADE, related_name="categories", verbose_name="Автор раздела",
+                               null=True, blank=True)
 
     def __str__(self):
         return self.title
 
     def get_absolute_url(self):
         return reverse("knowledge_base_app:category-detail", kwargs={"slug": self.slug})
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        cache.delete('categories_with_topics_articles')
+    
+    def delete(self, *args, **kwargs):
+        super().delete(*args, **kwargs)
+        cache.delete('categories_with_topics_articles')
 
     class Meta:
         ordering = ['title']

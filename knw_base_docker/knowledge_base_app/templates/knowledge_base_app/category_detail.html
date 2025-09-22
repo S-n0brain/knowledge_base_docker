@@ -2,6 +2,7 @@
 {% load static %}
 {% block title %}{{ category_curr.title }}{% endblock %}
 {% block content %}
+{% load my_tags %}
 
 {% if user.is_authenticated %}
 <div class="modal" tabindex="-1" aria-labelledby="modallabel{{ category_curr.slug }}" aria-hidden="true" id="modal{{ category_curr.slug }}">
@@ -28,18 +29,20 @@
 
     <div class="container my-5 px-5">
         <h2>{{ category_curr.title }}</h2>
+        <p class="text-muted mt-2"><strong>Автор:</strong> {% if category_curr.author and category_curr.author.first_name and category_curr.author.last_name %}{{ category_curr.author.last_name }} {{ category_curr.author.first_name }}{% else %}{{ category_curr.author }}{% endif %}</p>
         <p>
             <a href="{% url 'knowledge_base_app:index' %}" class="my-2 text-decoration-none">
             <img src="{% static 'image/arrow-left.svg' %}" alt="back"> Вернуться на главную</a>
         </p>
         {% if user.is_authenticated %}
-        {% if perms.knowledge_base_app.change_category %}
+        {% get_user_is_admin_or_superuser user as user_is_admin_or_superuser %}
+        {% if perms.knowledge_base_app.change_category and category_curr.author == user or user_is_admin_or_superuser %}
         <p>
             <a href="#" class="text-decoration-none text-warning"
             data-bs-toggle="modal" data-bs-target="#modal{{ category_curr.slug }}" id="{{ category_curr.slug }}-edit">Изменить название раздела <img src="{% static 'image/pencil-square.svg' %}" alt="edit"></a>
         </p>
         {% endif %}
-        {% if perms.knowledge_base_app.delete_category %}
+        {% if perms.knowledge_base_app.delete_category and category_curr.author == user or user_is_admin_or_superuser %}
         <p>
             <a href="#" class="text-decoration-none text-danger"
             data-bs-toggle="modal" data-bs-target="#modal{{ category_curr.slug }}" id="{{ category_curr.slug }}">Удалить раздел <img src="{% static 'image/x-circle.svg' %}" alt="delete"></a>
@@ -51,7 +54,7 @@
                 <li class="list-group-item w-75">
                     <div class="d-flex justify-content-between align-items-center">
                         <a href="{{ topic.get_absolute_url }}" class="h5 link-underline link-underline-opacity-0">{{ topic.title }}</a>
-                        {% if user.is_authenticated and perms.knowledge_base_app.delete_topic %}
+                        {% if user.is_authenticated and perms.knowledge_base_app.delete_topic and topic.author == user or user_is_admin_or_superuser %}
                             <button class="btn btn-outline-danger btn-sm d-flex align-items-center"
                             name="delete" value="{{ topic.title }}" id="{{ topic.slug }}"
                             data-bs-toggle="modal" data-bs-target="#modal{{ category_curr.slug }}">

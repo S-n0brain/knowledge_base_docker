@@ -37,7 +37,7 @@
         </p>
         {% if user.is_authenticated %}
         {% get_user_is_admin_or_superuser user as user_is_admin_or_superuser %}
-        {% if perms.knowledge_base_app.change_topic %}
+        {% if perms.knowledge_base_app.change_topic and topic_curr.author == user or user_is_admin_or_superuser %}
         <p>
             <a href="#" class="text-decoration-none text-warning"
             data-bs-toggle="modal" data-bs-target="#modal{{ topic_curr.slug }}" id="{{ topic_curr.slug }}-edit">Изменить название темы <img src="{% static 'image/pencil-square.svg' %}" alt="edit"></a>

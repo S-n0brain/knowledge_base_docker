@@ -24,6 +24,7 @@ def add_category(request: HttpRequest) -> HttpResponse:
         if form.is_valid():
             category = form.save(commit=False)
             category.slug = form.cleaned_data['slug']
+            category.author = request.user
             category.save()
             return redirect('knowledge_base_app:category-detail', slug=category.slug)
     return redirect(request.META.get('HTTP_REFERER', 'knowledge_base_app:index')) # redirect(request.POST.get('next', 'knowledge_base_app:index'))
@@ -115,25 +116,28 @@ class CategoryDetailView(ModelFormMixin, DetailView):
         context['topic_form'] = self.topic_form_class()
         return context
     
+    def get_object(self, queryset=None) -> Category:
+        return super().get_object(queryset)  # type: ignore
+
     def post(self, request, *args, **kwargs):
         # Обработка удаления категории
         if request.POST.get("delete_cat"):
-            if not request.user.has_perm('knowledge_base_app.delete_category'):
+            if not request.user.has_perm('knowledge_base_app.delete_category') or not get_user_is_admin_or_superuser(self.request.user) and self.get_object().author != self.request.user:
                 raise PermissionDenied
             self.object = self.get_object()
             self.object.delete()
             return redirect('knowledge_base_app:index')
         # Обработка удаления темы
         elif request.POST.get("delete_topic"):
-            if not request.user.has_perm('knowledge_base_app.delete_topic'):
-                raise PermissionDenied
             topic_slug = request.POST.get('delete_topic')
             topic = get_object_or_404(Topic, slug=topic_slug)
+            if not request.user.has_perm('knowledge_base_app.delete_topic') or not get_user_is_admin_or_superuser(self.request.user) and topic.author != self.request.user:
+                raise PermissionDenied
             topic.delete()
             return redirect('knowledge_base_app:category-detail', slug=self.get_object().slug) # type: ignore
         # Обработка редактирования категории
         elif request.POST.get("edit_cat"):
-            if not request.user.has_perm('knowledge_base_app.change_category'):
+            if not request.user.has_perm('knowledge_base_app.change_category') or not get_user_is_admin_or_superuser(self.request.user) and self.get_object().author != self.request.user:
                 raise PermissionDenied
             form = self.get_form_class()(request.POST, instance=self.get_object())
             self.object = self.get_object()
