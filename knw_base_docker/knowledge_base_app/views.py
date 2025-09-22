@@ -1,5 +1,6 @@
 from typing import Any
 from django.core.cache import cache
+from django.db.models.base import Model as Model
 from django.db.models.query import QuerySet
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
@@ -80,13 +81,16 @@ class ArticleDetailView(DetailView):
         context['topic_curr'] = self.get_object().topic # type: ignore
         context['categories'] = get_cached_categories() # Category.objects.prefetch_related('topics__articles')
         return context
-    
-    def post(self, request, *args, **kwargs):
+
+    def get_object(self, queryset=None) -> Article:
+        return super().get_object(queryset)  # type: ignore
+
+    def post(self, request: HttpRequest, *args, **kwargs):
+        article: Article = self.get_object()
         if request.POST.get("delete"):
-            if self.request.user.has_perm('knowledge_base_app.delete_article'):
-                self.object = self.get_object()
-                self.object.delete()
-                return redirect('knowledge_base_app:topic-detail', slug=self.object.topic.slug) # type: ignore
+            if self.request.user.has_perm('knowledge_base_app.delete_article') and article.author == self.request.user:
+                article.delete()
+                return redirect('knowledge_base_app:topic-detail', slug=article.topic.slug) # type: ignore
             else:
                 raise PermissionDenied
         return redirect('knowledge_base_app:index')
@@ -226,6 +230,15 @@ class ArticleUpdateView(PermissionRequiredMixin, UpdateView):
     form_class = ArticleUpdateForm
     template_name = 'knowledge_base_app/article_add_form.html'
     permission_required = 'knowledge_base_app.change_article'
+
+    def get_object(self, queryset=None) -> Article:
+        return super().get_object(queryset)  # type: ignore
+
+    def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
+        article: Article = self.get_object()
+        if article.author != self.request.user or not self.request.user.has_perm('knowledge_base_app.change_article'):
+            raise PermissionDenied
+        return super().get(request, *args, **kwargs)
 
     def form_valid(self, form):
         article: Article = form.save(commit=False)
