@@ -14,6 +14,9 @@ from django.contrib.auth.mixins import PermissionRequiredMixin
 from .documents import ArticleDocument
 from django.core.exceptions import PermissionDenied
 
+def get_user_is_admin_or_superuser(user) -> bool:
+    return user.is_superuser or user.groups.filter(name='admin').exists()
+
 @permission_required('knowledge_base_app.add_category', raise_exception=True)
 def add_category(request: HttpRequest) -> HttpResponse:
     if request.method == "POST":
@@ -88,7 +91,8 @@ class ArticleDetailView(DetailView):
     def post(self, request: HttpRequest, *args, **kwargs):
         article: Article = self.get_object()
         if request.POST.get("delete"):
-            if self.request.user.has_perm('knowledge_base_app.delete_article') and article.author == self.request.user:
+            if (self.request.user.has_perm('knowledge_base_app.delete_article') and
+            (article.author == self.request.user or get_user_is_admin_or_superuser(self.request.user))):
                 article.delete()
                 return redirect('knowledge_base_app:topic-detail', slug=article.topic.slug) # type: ignore
             else:
@@ -236,13 +240,12 @@ class ArticleUpdateView(PermissionRequiredMixin, UpdateView):
 
     def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         article: Article = self.get_object()
-        if article.author != self.request.user or not self.request.user.has_perm('knowledge_base_app.change_article'):
+        if (article.author != self.request.user or not self.request.user.has_perm('knowledge_base_app.change_article')) and not get_user_is_admin_or_superuser(self.request.user):
             raise PermissionDenied
         return super().get(request, *args, **kwargs)
 
     def form_valid(self, form):
         article: Article = form.save(commit=False)
-        article.author = self.request.user # type: ignore
         article.slug = form.cleaned_data['slug']
         article.save()
         return super().form_valid(form)

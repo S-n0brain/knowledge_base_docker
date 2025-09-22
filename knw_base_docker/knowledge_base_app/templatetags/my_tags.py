@@ -32,3 +32,7 @@ def add_category_form():
 def get_search_form():
     form = SearchArticleForm()
     return form
+
+@register.simple_tag
+def get_user_is_admin_or_superuser(user) -> bool:
+    return user.is_superuser or user.groups.filter(name='admin').exists()
