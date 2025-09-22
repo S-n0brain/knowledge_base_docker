@@ -126,3 +126,7 @@ class ArticleChunk(models.Model):
     article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name="chunks", verbose_name="Статья")
     embedding = VectorField(dimensions=1536, null=True, verbose_name="Векторное представление", default=None)
     text = models.TextField(blank=True, verbose_name="Текстовый фрагмент")
+    
+    class Meta:
+    	verbose_name = "Часть статьи для векторного представления"
+    	verbose_name_plural = "Части статьи для векторного представления"
