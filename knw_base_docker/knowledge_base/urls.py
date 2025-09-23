@@ -8,7 +8,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('knowledge_base_app.urls', namespace='knowledge_base_app')),
     path('users/', include('users.urls', namespace='users')),
-    path('ckeditor/', include('ckeditor_uploader.urls')),
+    path('ckeditor/', include("knowledge_base_app.my_ckeditor_urls")), # include('ckeditor_uploader.urls')),
     path('chat/', include('chatbot.urls', namespace='chatbot')),
 
 ] + debug_toolbar_urls()
