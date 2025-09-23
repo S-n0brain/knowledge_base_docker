@@ -75,37 +75,39 @@ class ChatView(LoginRequiredMixin, DetailView):
         chat = self.get_object()
         if data.get("name") == "send_message":
             message = data.get("message", "")
-            if message and type(message) is str and self.get_balance_proxy_api() > 0:
-                user_tokens, user_tokens_object = self.get_user_tokens()
-                message_tokens = self.num_tokens_from_string(message)
-                if message_tokens > user_tokens:
-                    # Кончились токены
-                    return JsonResponse({"no_tokens": True, "user_tokens": user_tokens}, status=429)
-                try:
-                    client: OpenAI = self.get_client()
-                except Exception as e:
-                    print(f'Ошибка получения клиента: {e}')
-                    return JsonResponse({"error": f"Ошибка получения клиента"}, status=500)
-                try:
-                    if not data.get("use_rag"):
-                        is_rag = False
-                        response = self.handle_norrmal_chat(client, chat, message)
-                    else:
-                        is_rag = True
-                        response = self.handle_rag_chat(client, message)
-                except Exception as e:
-                    print(f'Ошибка получения ответа от модели: {e}')
-                    return JsonResponse({"error": f"Ошибка получения ответа от модели"}, status=500)
-                self.append_messages_in_bd(chat, message, response, is_rag)
-                sum_tokens = response.usage.total_tokens # type: ignore
-                # Уменьшаем токены
-                user_tokens -= sum_tokens
-                if user_tokens_object:
-                    user_tokens_object.tokens_available = user_tokens if user_tokens > 0 else 0
-                    user_tokens_object.save()
-                    self.update_everyday_user_tokens(user_tokens_object)
-                return JsonResponse({"reply": response.output_text, "role": "Ассистент",
-                                     "model": response.model, "user_tokens": user_tokens, "is_rag": is_rag})
+            if message and type(message) is str:
+                if self.get_balance_proxy_api() > 0:
+                    user_tokens, user_tokens_object = self.get_user_tokens()
+                    message_tokens = self.num_tokens_from_string(message)
+                    if message_tokens > user_tokens:
+                        # Кончились токены
+                        return JsonResponse({"no_tokens": True, "user_tokens": user_tokens}, status=402)
+                    try:
+                        client: OpenAI = self.get_client()
+                    except Exception as e:
+                        print(f'Ошибка получения клиента: {e}')
+                        return JsonResponse({"error": f"Ошибка получения клиента"}, status=500)
+                    try:
+                        if not data.get("use_rag"):
+                            is_rag = False
+                            response = self.handle_norrmal_chat(client, chat, message)
+                        else:
+                            is_rag = True
+                            response = self.handle_rag_chat(client, message)
+                    except Exception as e:
+                        print(f'Ошибка получения ответа от модели: {e}')
+                        return JsonResponse({"error": f"Ошибка получения ответа от модели"}, status=500)
+                    self.append_messages_in_bd(chat, message, response, is_rag)
+                    sum_tokens = response.usage.total_tokens # type: ignore
+                    # Уменьшаем токены
+                    user_tokens -= sum_tokens
+                    if user_tokens_object:
+                        user_tokens_object.tokens_available = user_tokens if user_tokens > 0 else 0
+                        user_tokens_object.save()
+                        self.update_everyday_user_tokens(user_tokens_object)
+                    return JsonResponse({"reply": response.output_text, "role": "Ассистент",
+                                        "model": response.model, "user_tokens": user_tokens, "is_rag": is_rag})
+                return JsonResponse({"no_tokens": True, "user_tokens": "Баланс Proxy API для запросов с сервера кончился.\nПопросите администратора пополнить баланс"}, status=402)
         elif data.get("name") == "clear_chat":
             # Удаляем все сообщения в чате
             Message.objects.filter(chat=chat).delete()
