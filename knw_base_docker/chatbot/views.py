@@ -18,7 +18,7 @@ class ChatView(LoginRequiredMixin, DetailView):
     BASE_URL_MODAL = "https://api.proxyapi.ru/openai/v1"
     MODEL = "gpt-5-mini" # Модель для генерации ответов
     EMBEDDING_MODEL = "text-embedding-3-small" # Модель для получения эмбеддингов
-    K = 3 # Количество наиболее релевантных статей для поиска
+    K = 5 # Количество наиболее релевантных статей для поиска
     COUNTS_MESSAGE_HISTORY = 15 # Количество сообщений для истории
     DAYS_LIMIT = 90 # Количество дней для удаления старых сообщений
     ENCODING_DEFAULT_NAME = "o200k_base"
