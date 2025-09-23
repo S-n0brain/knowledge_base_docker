@@ -90,8 +90,7 @@ class Topic(models.Model):
     category = models.ForeignKey(to="Category", on_delete=models.CASCADE, related_name="topics", verbose_name="Раздел темы")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
-    author = models.ForeignKey(to=get_user_model(), on_delete=models.CASCADE, related_name="topics", verbose_name="Автор темы",
-                               null=True, blank=True)
+    author = models.ForeignKey(to=get_user_model(), on_delete=models.CASCADE, related_name="topics", verbose_name="Автор темы",)
 
     def __str__(self):
         return self.title
@@ -113,8 +112,7 @@ class Category(models.Model):
     slug = models.SlugField(max_length=200, unique=True, verbose_name="URL-адрес раздела")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
-    author = models.ForeignKey(to=get_user_model(), on_delete=models.CASCADE, related_name="categories", verbose_name="Автор раздела",
-                               null=True, blank=True)
+    author = models.ForeignKey(to=get_user_model(), on_delete=models.CASCADE, related_name="categories", verbose_name="Автор раздела")
 
     def __str__(self):
         return self.title
